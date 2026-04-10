@@ -29,7 +29,7 @@ Claude / Codex / Gemini CLI / Antigravity / Kimi
 
 直接在浏览器打开 `index.html`，或部署到任意静态托管服务。
 
-添加服务端时填入 CPA 管理地址（如 `http://ip:8317/v0/management`）和密钥即可。
+添加服务端时填入 CPA 服务地址（如 `http://ip:8317`）和密钥即可。
 
 ## 技术细节
 
