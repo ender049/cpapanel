@@ -4,7 +4,7 @@
 
 ## 在线访问
 
-**[cpa.vlrat.top](https://cpa.vlrat.top)**
+**[ender049.github.io/cpapanel](https://ender049.github.io/cpapanel/)**
 
 ## 为什么做这个
 
