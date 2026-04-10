@@ -29,7 +29,9 @@ Claude / Codex / Gemini CLI / Antigravity / Kimi
 
 直接在浏览器打开 `index.html`，或部署到任意静态托管服务。
 
-添加服务端时填入 CPA 服务地址（如 `http://ip:8317`）和密钥即可。
+添加服务端时填入 CPA 服务地址（如 `192.168.1.1:8317`）和密钥即可，端口可省略则默认 8317。
+
+> **注意：** 如果通过 HTTPS 访问本面板（如 GitHub Pages），浏览器会阻止向 HTTP 的 CPA 服务端发请求。请通过 HTTP 访问面板（如 `http://your-domain`），或将面板文件下载到本地直接打开。
 
 ## 技术细节
 
