@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPA 统计面板</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg0:#0f172a;--bg1:#1e293b;--bg2:#334155;--t1:#f1f5f9;--t2:#94a3b8;--acc:#3b82f6;--acc2:#2563eb;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444;--bdr:#475569}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg0);color:var(--t1);min-height:100vh;font-size:14px}
+.ctn{max-width:1600px;margin:0 auto;padding:16px 20px}
+.b{padding:6px 14px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.bp{background:var(--acc);color:#fff}.bp:hover{background:var(--acc2)}
+.bs{background:var(--bg2);color:var(--t1)}.bs:hover{background:var(--bdr)}
+.bd{background:var(--err);color:#fff}.bd:hover{background:#dc2626}
+.bsm{padding:4px 10px;font-size:12px}
+.b:disabled{opacity:.5;cursor:not-allowed}
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.hdr h1{font-size:22px;font-weight:700}
+.hdr-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.hdr-info{display:flex;gap:14px;align-items:center}
+.hdr-info .si{gap:4px;font-size:12px}
+.hdr-info .sv{font-size:16px}
+.hdr-info .sl{font-size:11px}
+.main-tabs{display:flex;gap:0;border-bottom:2px solid var(--bdr);margin-bottom:16px}
+.main-tab{padding:11px 28px;font-size:15px;font-weight:600;cursor:pointer;color:var(--t2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+.main-tab:hover{color:var(--t1)}.main-tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+.main-panel{display:none}.main-panel.active{display:block}
+.fbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.fbar select{padding:6px 10px;border-radius:6px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:12px}
+.fbar-label{font-size:11px;color:var(--t2)}
+.bgroup{display:flex;gap:1px;background:var(--bg2);border-radius:6px;padding:2px}
+.bgroup button{border:none;background:transparent;color:var(--t2);padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px}
+.bgroup button.active{background:var(--acc);color:#fff}
+.tbar{background:var(--bg1);border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+.tb-t{font-size:13px;font-weight:600;color:var(--t2);margin-right:4px}
+.si{display:flex;align-items:center;gap:4px;font-size:12px}
+.sv{font-weight:700;font-size:16px}
+.sl{color:var(--t2);font-size:11px}
+.bdg{padding:2px 7px;border-radius:3px;font-size:11px;font-weight:500;display:inline-block;white-space:nowrap}
+.bdg-claude{background:rgba(180,132,255,.15);color:#c084fc}.bdg-codex{background:rgba(16,185,129,.15);color:#10b981}
+.bdg-gemini_cli{background:rgba(251,191,36,.15);color:#fbbf24}.bdg-anti{background:rgba(251,146,60,.15);color:#fb923c}
+.bdg-kimi{background:rgba(14,165,233,.15);color:#0ea5e9}
+.bdg-ok{background:rgba(34,197,94,.15);color:var(--ok)}.bdg-err{background:rgba(239,68,68,.15);color:var(--err)}
+.bdg-warn{background:rgba(245,158,11,.15);color:var(--warn)}.bdg-plan{background:rgba(99,102,241,.15);color:#818cf8}
+.bdg-on{background:rgba(34,197,94,.15);color:var(--ok)}.bdg-off{background:rgba(239,68,68,.15);color:var(--err)}
+.ld{display:inline-block;width:14px;height:14px;border:2px solid var(--bdr);border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .3s ease-out}
+@keyframes dataFlash{0%{background:rgba(59,130,246,.25);box-shadow:inset 0 0 0 1px rgba(59,130,246,.4)}50%{background:rgba(59,130,246,.15);box-shadow:inset 0 0 0 1px rgba(59,130,246,.2)}100%{background:transparent;box-shadow:inset 0 0 0 1px transparent}}
+.data-flash{animation:dataFlash .8s ease-out}
+.font-size-sm{font-size:13px}.font-size-sm .b{font-size:12px}.font-size-sm .bsm{font-size:11px}.font-size-sm .sv{font-size:15px}.font-size-sm .sn{font-size:14px}.font-size-sm .bdg{font-size:11px}.font-size-sm .sec-title{font-size:14px}.font-size-sm .tw table{font-size:12px}.font-size-sm .tw .mono{font-size:11px}.font-size-sm .si{font-size:12px}.font-size-sm .sl{font-size:11px}.font-size-sm .sd-i{font-size:12px}.font-size-sm .hdr h1{font-size:20px}.font-size-sm .main-tab{font-size:14px}.font-size-sm .fc-name{font-size:12px}.font-size-sm .fc-acc{font-size:11px}.font-size-sm .qih,.font-size-sm .ql,.font-size-sm .qv{font-size:11px}.font-size-sm .qload,.font-size-sm .qempty{font-size:11px}.font-size-sm .fbar select,.font-size-sm .sec-controls select{font-size:12px}.font-size-sm .bgroup button{font-size:12px}.font-size-sm .fbar-label{font-size:11px}
+.font-size-md{font-size:15px}.font-size-md .b{font-size:14px}.font-size-md .bsm{font-size:12px}.font-size-md .sv{font-size:17px}.font-size-md .sn{font-size:16px}.font-size-md .bdg{font-size:12px}.font-size-md .sec-title{font-size:16px}.font-size-md .tw table{font-size:13px}.font-size-md .tw .mono{font-size:12px}.font-size-md .si{font-size:13px}.font-size-md .sl{font-size:12px}.font-size-md .sd-i{font-size:13px}.font-size-md .hdr h1{font-size:23px}.font-size-md .main-tab{font-size:16px}.font-size-md .fc-name{font-size:14px}.font-size-md .fc-acc{font-size:13px}.font-size-md .qih,.font-size-md .ql,.font-size-md .qv{font-size:13px}.font-size-md .qload,.font-size-md .qempty{font-size:13px}.font-size-md .fbar select,.font-size-md .sec-controls select{font-size:13px}.font-size-md .bgroup button{font-size:13px}.font-size-md .fbar-label{font-size:12px}
+.font-size-lg{font-size:17px}.font-size-lg .b{font-size:15px}.font-size-lg .bsm{font-size:13px}.font-size-lg .sv{font-size:20px}.font-size-lg .sn{font-size:18px}.font-size-lg .bdg{font-size:13px}.font-size-lg .sec-title{font-size:18px}.font-size-lg .tw table{font-size:14px}.font-size-lg .tw .mono{font-size:13px}.font-size-lg .si{font-size:14px}.font-size-lg .sl{font-size:13px}.font-size-lg .sd-i{font-size:14px}.font-size-lg .hdr h1{font-size:26px}.font-size-lg .main-tab{font-size:18px}.font-size-lg .fc-name{font-size:15px}.font-size-lg .fc-acc{font-size:14px}.font-size-lg .qih,.font-size-lg .ql,.font-size-lg .qv{font-size:14px}.font-size-lg .qload,.font-size-lg .qempty{font-size:14px}.font-size-lg .fbar select,.font-size-lg .sec-controls select{font-size:14px}.font-size-lg .bgroup button{font-size:14px}.font-size-lg .fbar-label{font-size:13px}
+.font-sel{padding:3px 6px;border-radius:4px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:11px}
+.pbar{height:5px;background:var(--bg0);border-radius:3px;overflow:hidden;margin-top:3px}
+.pfill{height:100%;border-radius:3px;transition:width .3s}
+.pfill.h{background:var(--err)}.pfill.m{background:var(--warn)}.pfill.l{background:var(--ok)}
+.ss{margin-bottom:20px}
+.sb{background:var(--bg1);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;cursor:pointer;user-select:none}
+.sb:hover{background:#1e2d44}
+.sir{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}.dot.on{background:var(--ok);box-shadow:0 0 4px var(--ok)}.dot.off{background:var(--err)}
+.sn{font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px}
+.arrow{display:inline-block;width:0;height:0;border-left:5px solid var(--t2);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .2s}
+.arrow.col{transform:rotate(-90deg)}
+.sd{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:3px}
+.sd-i{font-size:12px;color:var(--t2);display:flex;align-items:center;gap:3px}
+.sd-i strong{color:var(--t1)}
+.su{background:var(--bg1);padding:8px 16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--bdr);border-radius:0}
+.su-i{display:flex;align-items:center;gap:4px;font-size:12px}
+.su-v{font-weight:700;color:var(--t1)}.su-l{color:var(--t2)}
+.s-act{display:flex;gap:4px;flex-shrink:0}
+.sbdy{background:var(--bg0);border-radius:0 0 8px 8px;padding:14px 12px;border-top:1px solid var(--bdr)}
+.sbdy.col{display:none}
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+.fc{background:var(--bg2);border-radius:8px;border:1px solid var(--bdr);overflow:hidden}
+.fc-top{padding:12px 12px 0}
+.fc-line1{display:flex;align-items:center;gap:5px}
+.fc-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.fc-acts{display:flex;gap:3px;flex-shrink:0}
+.fc-acts .b{font-size:11px;padding:2px 7px}
+.fc-line2{display:flex;align-items:center;gap:4px;margin-top:5px;flex-wrap:wrap}
+.fc-acc{font-size:12px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px}
+.fc-sep{border-top:1px solid var(--bdr);margin-top:10px}
+.fc-body{padding:10px 12px 12px}
+.qi{margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(71,85,105,.4)}
+.qi:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.qih{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:3px;gap:4px}
+.ql{color:var(--t2);flex-shrink:0}.qv{font-weight:600;text-align:right;font-size:12px}
+.qm{font-size:10px;color:var(--t2);margin-top:1px}
+.qe{color:var(--err);font-size:11px;padding:6px;background:rgba(239,68,68,.08);border-radius:4px}
+.qload{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--t2);font-size:12px;padding:10px 0}
+.qempty{text-align:center;color:var(--t2);font-size:12px;padding:10px 0;cursor:pointer}
+.qempty:hover{color:var(--acc)}
+.sec-title{font-size:14px;font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:7px 14px;border-radius:6px;background:var(--bg1);border:1px solid var(--bdr);transition:all .15s}
+.sec-title:hover{border-color:var(--acc);color:var(--acc)}
+.sec-title .arrow{display:inline-block;width:0;height:0;border-left:5px solid var(--t2);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .2s}
+.sec-title .arrow.col{transform:rotate(-90deg)}
+.sec-title .st-label{display:inline-flex;align-items:center;gap:6px}
+.sec-title .st-icon{font-size:13px;opacity:.7}
+.sec-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.sec-controls select{padding:5px 10px;border-radius:5px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:12px}
+.sec-controls-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.tw{overflow-x:auto;max-height:400px;overflow-y:auto;border-radius:6px;border:1px solid var(--bdr);margin-bottom:16px}
+.tw table{width:100%;border-collapse:collapse;font-size:12px}
+.tw th,.tw td{padding:6px 8px;text-align:left;border-bottom:1px solid rgba(71,85,105,.4);white-space:nowrap}
+.tw th{background:var(--bg2);color:var(--t2);font-weight:600;position:sticky;top:0;z-index:1}
+.tw tr:hover{background:rgba(255,255,255,.02)}
+.tw .mono{font-family:monospace;font-size:11px}
+.tw .num{text-align:right}
+.ep-toggle{cursor:pointer;color:var(--t2);font-size:12px;user-select:none;display:flex;align-items:center;gap:4px}
+.ep-toggle:hover{color:var(--t1)}
+.ep-arrow{display:inline-block;font-size:8px;transition:transform .15s}
+.ep-arrow.open{transform:rotate(90deg)}
+.ep-models{background:rgba(0,0,0,.15)}
+.ep-models td{padding-left:24px!important}
+.mo{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal{background:var(--bg1);border-radius:10px;padding:20px;width:90%;max-width:420px}
+.mt{font-size:17px;font-weight:600;margin-bottom:14px}
+.fg2{margin-bottom:10px}.fl{display:block;font-size:13px;color:var(--t2);margin-bottom:3px}
+.fi{width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--bdr);background:var(--bg0);color:var(--t1);font-size:13px}
+.fi:focus{outline:none;border-color:var(--acc)}
+.ma{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.toast{position:fixed;top:20px;right:20px;background:var(--bg2);border:1px solid var(--acc);color:var(--t1);padding:10px 18px;border-radius:8px;font-size:13px;z-index:2000;display:flex;align-items:center;gap:8px;opacity:0;transform:translateY(-10px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.hidden{display:none!important}
+.tm{color:var(--t2)}
+.ak-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;border:1px solid var(--bdr);margin-bottom:6px;background:var(--bg0);transition:all .15s}
+.ak-row:hover{border-color:var(--acc)}
+.ak-row .ak-val{flex:1;font-family:monospace;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ak-row .ak-masked{color:var(--t2)}
+.ak-row .ak-full{display:none;word-break:break-all;white-space:normal}
+.ak-row.show-full .ak-masked{display:none}
+.ak-row.show-full .ak-full{display:block}
+.empty{text-align:center;padding:40px 20px;color:var(--t2)}
+.loading-screen{text-align:center;padding:60px 20px;color:var(--t2)}
+.loading-screen .ld{width:24px;height:24px;border-width:3px;margin-bottom:12px}
+.loading-screen p{font-size:14px}
+.auto-refresh{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t2)}
+.auto-refresh select{padding:3px 6px;border-radius:4px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:11px}
+.ar-btn{padding:3px 10px;border-radius:4px;border:1px solid var(--bdr);background:var(--bg2);color:var(--t1);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;transition:all .15s;white-space:nowrap}
+.ar-btn:hover{border-color:var(--acc);color:var(--acc)}
+.ar-btn:disabled{opacity:.5;cursor:not-allowed}
+.ar-btn .ld{width:10px;height:10px;border-width:1.5px}
+@media(max-width:768px){.fg{grid-template-columns:1fr}.sb{flex-direction:column;align-items:flex-start}.tbar{gap:8px 12px;padding:10px 12px}.tbar .si{min-width:0}.tbar .sv{font-size:14px}.tbar .sl{font-size:10px}.hdr{flex-direction:column;align-items:flex-start}.hdr-right{width:100%;justify-content:space-between;flex-wrap:wrap}}
+</style>
+</head>
+<body class="font-size-md">
+<div class="ctn">
+  <div class="hdr">
+    <h1>CPA 统计面板</h1>
+    <div class="hdr-right">
+      <div class="hdr-info" id="hdrInfo"></div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <select class="font-sel" onchange="document.body.className='font-size-'+this.value;localStorage.setItem('apm_font',this.value)"><option value="sm">小</option><option value="md" selected>中</option><option value="lg">大</option></select>
+        <div class="auto-refresh"><select id="arSelect" onchange="setAutoRefresh(this.value);localStorage.setItem('apm_ar',this.value)"><option value="0">关闭</option><option value="30">30s</option><option value="60" selected>60s</option><option value="120">2m</option><option value="300">5m</option></select><button class="ar-btn" id="arBtn" onclick="manualRefresh()"><span id="arBtnText">刷新</span></button></div>
+        <button class="b bp bsm" onclick="showAddModal()">+ 添加服务端</button>
+      </div>
+    </div>
+  </div>
+  <div class="main-tabs">
+    <div class="main-tab active" onclick="switchMain('cred')">服务管理</div>
+    <div class="main-tab" onclick="switchMain('stats')">使用统计</div>
+  </div>
+  <div id="credPanel" class="main-panel active"></div>
+  <div id="statsPanel" class="main-panel"></div>
+</div>
+<div id="sModal" class="mo hidden"><div class="modal"><div class="mt" id="mt2">添加服务端</div><div class="fg2"><label class="fl">名称</label><input class="fi" id="sn" placeholder="例如: 生产环境"></div><div class="fg2"><label class="fl">API 地址</label><input class="fi" id="su" placeholder="http://localhost:8317"></div><div class="fg2"><label class="fl">管理密钥</label><input type="password" class="fi" id="sk" placeholder="管理密钥"></div><div class="ma"><button class="b bs" onclick="hideSModal()">取消</button><button class="b bp" onclick="saveSrv()">保存</button></div></div></div>
+<div id="dModal" class="mo hidden"><div class="modal"><div class="mt">确认删除</div><p id="dmsg" style="font-size:14px"></p><div class="ma"><button class="b bs" onclick="hideDModal()">取消</button><button class="b bd" onclick="confirmDel()">删除</button></div></div></div>
+<div id="addCredModal" class="mo hidden"><div class="modal" style="max-width:520px"><div class="mt">添加凭证 <span id="addCredSrv" style="font-size:12px;color:var(--t2)"></span></div><div id="oauthStep1"><div style="font-size:13px;font-weight:600;margin-bottom:8px">OAuth 登录</div><div style="display:flex;gap:6px;flex-wrap:wrap" id="oauthBtns"></div></div><div id="oauthStep2" class="hidden"><div style="font-size:13px;font-weight:600;margin-bottom:8px">OAuth 授权 <span id="oauthProvider" class="bdg bdg-codex"></span> <span id="oauthPolling" style="font-size:11px;color:var(--t2)">等待授权中...</span></div><div style="font-size:12px;color:var(--t2);margin-bottom:6px">在浏览器中打开以下链接完成授权，或手动复制链接：</div><div style="background:var(--bg0);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;font-size:11px;word-break:break-all;max-height:60px;overflow-y:auto;margin-bottom:8px" id="oauthUrl"></div><div style="display:flex;gap:6px;margin-bottom:12px"><button class="b bs bsm" onclick="copyOAuthUrl()">复制链接</button><button class="b bp bsm" onclick="openOAuthUrl()">打开链接</button><button class="b bs bsm" onclick="cancelOAuth()">取消</button></div><div style="font-size:13px;font-weight:600;margin-bottom:6px">回填回调 URL</div><div style="font-size:11px;color:var(--t2);margin-bottom:6px">如果自动轮询未检测到授权完成，请将浏览器回调地址粘贴到下方：</div><div style="display:flex;gap:6px;margin-bottom:8px"><input class="fi" id="callbackUrl" placeholder="https://...callback?code=...&state=..." style="flex:1;font-size:12px"><button class="b bp bsm" onclick="submitCallback()">提交</button></div></div><div style="margin:12px 0;border-top:1px solid var(--bdr)"></div><div><div style="font-size:13px;font-weight:600;margin-bottom:8px">上传认证文件</div><div style="font-size:12px;color:var(--t2);margin-bottom:8px">选择 .json 认证文件上传到服务端</div><div style="display:flex;gap:8px;align-items:center"><input type="file" id="credFile" accept=".json" style="font-size:12px;color:var(--t2);flex:1"><button class="b bp bsm" onclick="uploadCredFile()">上传</button></div></div><div class="ma" style="margin-top:16px"><button class="b bs" onclick="hideAddCredModal()">关闭</button></div></div></div>
+<div id="toast" class="toast"></div>
+<div id="apiKeyModal" class="mo hidden"><div class="modal" style="max-width:560px"><div class="mt">API Key 管理 <span id="akSrvName" style="font-size:12px;color:var(--t2)"></span></div><div id="akLoading" style="text-align:center;padding:20px;color:var(--t2)"><span class="ld" style="width:20px;height:20px;border-width:3px"></span><span style="margin-left:8px">加载中...</span></div><div id="akContent" class="hidden"><div id="akList" style="max-height:300px;overflow-y:auto;margin-bottom:12px"></div><div style="display:flex;gap:6px"><input class="fi" id="akNewKey" placeholder="输入或生成 API Key" style="flex:1;font-size:12px;font-family:monospace"><button class="b bs bsm" onclick="genApiKey()" title="随机生成 sk- 前缀密钥">生成</button><button class="b bp bsm" onclick="addApiKey()">添加</button></div></div><div class="ma"><button class="b bs" onclick="hideApiKeyModal()">关闭</button></div></div></div>
+<div id="settingsModal" class="mo hidden"><div class="modal" style="max-width:520px"><div class="mt">网络设置 <span id="stSrvName" style="font-size:12px;color:var(--t2)"></span></div><div id="stLoading" style="text-align:center;padding:20px;color:var(--t2)"><span class="ld" style="width:20px;height:20px;border-width:3px"></span><span style="margin-left:8px">加载中...</span></div><div id="stContent" class="hidden" style="display:flex;flex-direction:column;gap:12px"></div><div class="ma"><button class="b bs" onclick="hideSettingsModal()">关闭</button></div></div></div>
+<script>
+let servers=[],quotaCache={},usageCache={},loadingFiles=new Set(),collapsed=new Set(),editId=null,delId=null,mainTab='cred',timeRange='7d',statsServer='all',epExpanded={},detFilter={model:'all',cred:'all',ep:'all',srv:'all'},refreshing=new Set(),statsRefreshing=false,firstLoad=true,autoRefreshSec=60,autoRefreshTimer=null,autoRefreshCountdown=0,autoRefreshCountdownTimer=null,statsFlash=false,credFlash=new Set(),statsCollapsed=new Set();
+const bc={claude:'bdg-claude',codex:'bdg-codex','gemini-cli':'bdg-gemini_cli',antigravity:'bdg-anti',kimi:'bdg-kimi'};
+const EP={
+  claude:{url:'https://api.anthropic.com/api/oauth/usage',method:'GET',headers:{'Authorization':'Bearer $TOKEN$','Content-Type':'application/json','anthropic-beta':'oauth-2025-04-20'}},
+  codex:{url:'https://chatgpt.com/backend-api/wham/usage',method:'GET',headers:{'Authorization':'Bearer $TOKEN$','Content-Type':'application/json','User-Agent':'codex_cli_rs/0.76.0 (Debian 13.0.0; x86_64) WindowsTerminal'}},
+  'gemini-cli':{url:'https://cloudcode-pa.googleapis.com/v1internal:retrieveUserQuota',method:'POST',headers:{'Authorization':'Bearer $TOKEN$','Content-Type':'application/json'}},
+  antigravity:{url:'https://daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels',method:'POST',headers:{'Authorization':'Bearer $TOKEN$','Content-Type':'application/json','User-Agent':'antigravity/1.11.5 windows/amd64'}},
+  kimi:{url:'https://api.kimi.com/coding/v1/usages',method:'GET',headers:{'Authorization':'Bearer $TOKEN$'}}
+};
+function np(p){if(!p)return null;const s=String(p).toLowerCase().trim();return{claude:'claude',claudepro:'claude',claude_pro:'claude',codex:'codex',copilot:'codex',gemini:'gemini-cli','gemini-cli':'gemini-cli',gemini_cli:'gemini-cli',antigravity:'antigravity',kimi:'kimi'}[s]||s}
+function nai(v){if(!v)return null;if(typeof v==='string'){const t=v.trim();return t||null}return String(v)||null}
+function djwt(t){try{const p=t.split('.');if(p.length<2)return null;let b=p[1].replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';return JSON.parse(atob(b))}catch{return null}}
+function exCId(f){if(f.id_token){const id=typeof f.id_token==='string'?djwt(f.id_token):f.id_token;if(id?.chatgpt_account_id)return id.chatgpt_account_id}return f.chatgpt_account_id||f.account_id||f.account||null}
+function exGP(f){const a=f.account||'';const m=a.match(/\(([^()]+)\)/g);return m&&m.length?m[m.length-1].replace(/[()]/g,'').trim():(a||'default')}
+function ck(s,f){return`${s}::${f}`}
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function fmtK(n){if(n==null)return'-';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return String(n)}
+function fmtResetTime(v){if(!v)return'';if(typeof v==='number'){if(v>1e12)return new Date(v).toLocaleString();if(v>1e9)return new Date(v*1000).toLocaleString();const m=Math.floor(v/60),s=v%60;return m>0?`${m}分${s}秒后`:`${s}秒后`}return fmtTs(String(v))}
+function fmtTs(ts){if(!ts)return'-';try{const d=new Date(ts);if(isNaN(d.getTime())){const t=String(ts).match(/(\d+)/);if(t)return t[1];return ts}return d.toLocaleString()}catch{return ts}}
+function maskUrl(u){try{const r=new URL(u);return r.host+r.pathname.replace(/\/$/,'')}catch{return u}}
+function maskKey(ep){if(!ep)return ep;let s=String(ep).trim();const m=s.match(/^(GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD)\s+/i);let method=m?m[0].trim():'';if(m)s=s.substring(m[0].length).trim();const masked=s.length>12?s.slice(0,4)+'****'+s.slice(-4):s.slice(0,2)+'****';return(method?method+' ':'')+masked}
+function maskEp(ep){try{if(!ep)return ep;let s=String(ep).trim();const m=s.match(/^(GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD)\s+/i);let method=m?m[0].trim():'';if(m)s=s.substring(m[0].length).trim();s=s.replace(/([a-f0-9]{6,})/gi,m=>m.slice(0,4)+'****');s=s.replace(/(key|token|secret|password|api[-_]?key)=([^&?\s]{3})[^&?\s]*/gi,'$1=$2****');try{const r=new URL(s);let p=r.pathname.replace(/\/$/,'');p=p.replace(/([a-f0-9]{6,})/gi,m=>m.slice(0,4)+'****');if(r.search){const sp=new URLSearchParams(r.search);for(const k of sp.keys()){const v=sp.get(k);if(v&&v.length>4)sp.set(k,v.slice(0,3)+'****')}p+='?'+sp.toString().replace(/(key|token|secret|password|api[-_]?key)=([^&]{3})[^&]*/gi,'$1=$2****')}return(method?method+' ':'')+r.host+p}catch{return(method?method+' ':'')+s}}catch{return ep}}
+function getPS(f){const s={};f.forEach(x=>{const p=np(x.provider)||'?';s[p]=(s[p]||0)+1});return s}
+
+function encStore(d){try{const j=JSON.stringify(d);const b=btoa(unescape(encodeURIComponent(j)));return b.split('').reverse().join('')}catch{return JSON.stringify(d)}}
+function decStore(s){try{if(!s)return null;const r=s.split('').reverse().join('');const d=decodeURIComponent(escape(atob(r)));return JSON.parse(d)}catch{try{return JSON.parse(s)}catch{return null}}}
+function load(){const s=decStore(localStorage.getItem('apm_s'))||[];servers=s.map(x=>({id:x.id,name:x.name,url:x.url,key:x.key,status:null,files:[]}))}
+function save(){localStorage.setItem('apm_s',encStore(servers.map(x=>({id:x.id,name:x.name,url:x.url,key:x.key}))))}
+function loadQC(){quotaCache={}}
+function saveQC(){}
+function switchMain(t){mainTab=t;document.querySelectorAll('.main-tab').forEach((el,i)=>el.classList.toggle('active',i===(t==='cred'?0:1)));document.getElementById('credPanel').classList.toggle('active',t==='cred');document.getElementById('statsPanel').classList.toggle('active',t==='stats');renderCur()}
+function renderCur(){renderHdr();mainTab==='cred'?renderCred():renderStats()}
+
+function renderHdr(){const hi=document.getElementById('hdrInfo');const on=servers.filter(s=>s.status==='online').length,tf=servers.reduce((a,s)=>a+(s.files?.length||0),0);const connecting=servers.filter(s=>s.status===null).length;hi.innerHTML=`<div class="si"><span class="sv">${servers.length}</span><span class="sl">服务端</span></div>${connecting?`<div class="si"><span class="ld" style="width:10px;height:10px;border-width:1.5px"></span><span style="font-size:12px;color:var(--t2)">${connecting}台连接中</span></div>`:`<div class="si"><span class="sv" style="color:var(--ok)">${on}</span><span class="sl">在线</span></div>`}<div class="si"><span class="sv">${tf}</span><span class="sl">文件</span></div>`}
+
+function setAutoRefresh(v){autoRefreshSec=parseInt(v)||0;clearInterval(autoRefreshTimer);clearInterval(autoRefreshCountdownTimer);autoRefreshCountdown=autoRefreshSec;updateCountdown();if(autoRefreshSec>0){autoRefreshCountdownTimer=setInterval(()=>{autoRefreshCountdown--;updateCountdown();if(autoRefreshCountdown<=0){autoRefreshCountdown=autoRefreshSec;connectAll()}},1000)}}
+function updateCountdown(){const btn=document.getElementById('arBtnText');if(!btn)return;if(autoRefreshSec<=0){btn.textContent='刷新';return}btn.textContent=autoRefreshCountdown+'s 刷新'}
+function manualRefresh(){autoRefreshCountdown=autoRefreshSec;updateCountdown();connectAll()}
+
+document.addEventListener('DOMContentLoaded',()=>{load();loadQC();const fs=localStorage.getItem('apm_font')||'md';document.body.className='font-size-'+fs;document.querySelector('.font-sel').value=fs;const ar=localStorage.getItem('apm_ar')||'60';document.getElementById('arSelect').value=ar;firstLoad=true;renderCur();connectAll().then(()=>setAutoRefresh(ar))});
+async function connectAll(){const wasFirst=firstLoad;if(!wasFirst){statsRefreshing=true;renderCur()}await Promise.allSettled(servers.map(async s=>{await connectSrv(s);renderCur()}));await Promise.allSettled(servers.filter(s=>s.status==='online').map(async s=>{await fetchUsage(s);renderCur()}));firstLoad=false;statsRefreshing=false;statsFlash=!wasFirst;if(!wasFirst)servers.forEach(s=>{if(s.status==='online')credFlash.add(s.id)});refreshing.clear();renderCur()}
+async function connectSrv(srv){try{const r=await fetch(`${srv.url}/v0/management/auth-files`,{headers:{'Authorization':`Bearer ${srv.key}`}});if(r.ok){const d=await r.json();srv.files=d.files||[];srv.status='online'}else{srv.status='offline';srv.files=[]}}catch{srv.status='offline';srv.files=[]}save()}
+async function fetchUsage(srv){try{const r=await fetch(`${srv.url}/v0/management/usage`,{headers:{'Authorization':`Bearer ${srv.key}`}});usageCache[srv.id]=r.ok?await r.json():null}catch{usageCache[srv.id]=null}}
+
+function filterU(raw,range){if(range==='all'||!raw)return raw?.usage||raw;const u=raw.usage||raw;if(!u?.apis)return u;const ms={'7h':7*36e5,'24h':24*36e5,'7d':7*24*36e5}[range];if(!ms)return u;const now=Date.now(),start=now-ms,apis=u.apis||{},fa={},ts={total_requests:0,success_count:0,failure_count:0,total_tokens:0};Object.entries(apis).forEach(([ep,ae])=>{const models=ae.models||{},fm={};let has=false;const as={total_requests:0,success_count:0,failure_count:0,total_tokens:0};Object.entries(models).forEach(([mn,me])=>{const det=(me.details||[]).filter(d=>{const t=Date.parse(d.timestamp);return t>=start&&t<=now});if(!det.length)return;let sc=0,fc=0;det.forEach(d=>d.failed?fc++:sc++);const tok=det.reduce((s,d)=>s+((d.tokens?.total_tokens)||0),0);fm[mn]={total_requests:det.length,success_count:sc,failure_count:fc,total_tokens:tok,details:det};as.total_requests+=det.length;as.success_count+=sc;as.failure_count+=fc;as.total_tokens+=tok;has=true});if(!has)return;fa[ep]={...as,models:fm};ts.total_requests+=as.total_requests;ts.success_count+=as.success_count;ts.failure_count+=as.failure_count;ts.total_tokens+=as.total_tokens});return{...ts,apis:fa}}
+
+function getDetailsWithServer(u,srvId,srvName){if(!u?.apis)return[];const d=[];Object.entries(u.apis).forEach(([ep,ae])=>{Object.entries(ae.models||{}).forEach(([mn,me])=>{(me.details||[]).forEach(x=>{d.push({...x,_m:mn,_ep:ep,_t:Date.parse(x.timestamp)||0,_sid:srvId,_sn:srvName})})})});return d}
+function resolveEmail(authIndex,allFiles){const f=allFiles.find(x=>x.auth_index===authIndex||x.authIndex===authIndex);return f?.email||''}
+function resolveFileName(authIndex,allFiles){const f=allFiles.find(x=>x.auth_index===authIndex||x.authIndex===authIndex);return f?.name||String(authIndex)}
+
+async function refSQ(sid){if(refreshing.has(sid))return;refreshing.add(sid);renderCur();try{const s=servers.find(x=>x.id===sid);if(!s||s.status!=='online')return;await fetchUsage(s);await Promise.allSettled((s.files||[]).filter(f=>(f.status==='ready'||f.status==='active')&&!f.disabled).map(f=>refQ(s,f)));credFlash.add(sid);renderCur()}finally{refreshing.delete(sid);renderCur()}}
+async function refQ(srv,file){const k=ck(srv.id,file.name);loadingFiles.add(k);renderCur();try{const p=np(file.provider),ai=nai(file.auth_index||file.authIndex||file.id||file.name),ep=EP[p];if(!ai||!ep){quotaCache[k]={data:null,error:!ep?'不支持: '+p:'缺authIndex',ts:Date.now()};saveQC();return}const h={...ep.headers};let body;if(p==='codex'){const aid=exCId(file);if(!aid){quotaCache[k]={data:null,error:'缺account_id',ts:Date.now()};saveQC();return}h['Chatgpt-Account-Id']=aid}else if(p==='gemini-cli')body=JSON.stringify({project:exGP(file)});else if(p==='antigravity')body=JSON.stringify({project:'bamboo-precept-lgxtn'});if(ep.method==='GET'&&p!=='codex')body=undefined;const r=await fetch(`${srv.url}/v0/management/api-call`,{method:'POST',headers:{'Authorization':`Bearer ${srv.key}`,'Content-Type':'application/json'},body:JSON.stringify({authIndex:ai,method:ep.method,url:ep.url,header:h,data:body})});if(!r.ok)throw new Error(`HTTP ${r.status}`);const res=await r.json(),sc=res.status_code??res.statusCode??0,raw=res.body??res.bodyText;const parsed=typeof raw==='string'&&raw.trim()?JSON.parse(raw):raw;quotaCache[k]=sc>=200&&sc<300?{data:parsed,error:null,ts:Date.now()}:{data:null,error:`HTTP ${sc}`,ts:Date.now()};saveQC()}catch(e){quotaCache[k]={data:null,error:e.message,ts:Date.now()};saveQC()}finally{loadingFiles.delete(k);renderCur()}}
+function toggleCol(id){collapsed.has(id)?collapsed.delete(id):collapsed.add(id);renderCred()}
+function toggleAllCol(){const allCol=collapsed.size===servers.length&&servers.length;servers.forEach(s=>{allCol?collapsed.delete(s.id):collapsed.add(s.id)});renderCred()}
+function toggleStatsCol(key){statsCollapsed.has(key)?statsCollapsed.delete(key):statsCollapsed.add(key);renderStats()}
+function toggleAllStatsCol(){const keys=['model','apikey','cred','detail'];const allCol=keys.every(k=>statsCollapsed.has(k));keys.forEach(k=>{allCol?statsCollapsed.delete(k):statsCollapsed.add(k)});renderStats()}
+
+/* ============ CREDENTIALS PANEL ============ */
+function renderCred(){
+  const el=document.getElementById('credPanel');
+  const pf=document.getElementById('cred_fp')?.value||'all',sf=document.getElementById('cred_fs')?.value||'all';
+  let fbar=`<div class="fbar"><select id="cred_fp" onchange="renderCred()"><option value="all" ${pf==='all'?'selected':''}>全部提供商</option><option value="claude" ${pf==='claude'?'selected':''}>Claude</option><option value="codex" ${pf==='codex'?'selected':''}>Codex</option><option value="gemini-cli" ${pf==='gemini-cli'?'selected':''}>Gemini CLI</option><option value="antigravity" ${pf==='antigravity'?'selected':''}>Antigravity</option><option value="kimi" ${pf==='kimi'?'selected':''}>Kimi</option></select><select id="cred_fs" onchange="renderCred()"><option value="all" ${sf==='all'?'selected':''}>全部状态</option><option value="active" ${sf==='active'?'selected':''}>正常</option><option value="error" ${sf==='error'?'selected':''}>错误</option><option value="disabled" ${sf==='disabled'?'selected':''}>已禁用</option></select><div style="margin-left:auto"><button class="b bs bsm" onclick="toggleAllCol()">${collapsed.size===servers.length&&servers.length?'全部展开':'全部折叠'}</button></div></div>`;
+  if(!servers.length){el.innerHTML=fbar+'<div class="empty">暂无服务端，点击右上角添加</div>';credFlash.clear();return}
+  el.innerHTML=fbar+servers.map(s=>renderCredSrv(s,pf,sf)).join('');
+  credFlash.clear();
+}
+function renderCredSrv(srv,pf,sf){const connecting=srv.status===null,on=srv.status==='online',files=srv.files||[],ac=files.filter(f=>(f.status==='ready'||f.status==='active')&&!f.disabled).length,dc=files.filter(f=>f.disabled).length,ec=files.filter(f=>f.status!=='ready'&&f.status!=='active'&&!f.disabled).length;const ps=getPS(files),isC=collapsed.has(srv.id);const u=filterU(usageCache[srv.id],'all');let ff=files.map(f=>({...f,_sid:srv.id}));if(pf!=='all')ff=ff.filter(f=>np(f.provider)===pf);if(sf==='active')ff=ff.filter(f=>(f.status==='ready'||f.status==='active')&&!f.disabled);else if(sf==='error')ff=ff.filter(f=>f.status!=='ready'&&f.status!=='active'&&!f.disabled);else if(sf==='disabled')ff=ff.filter(f=>f.disabled);const pb=Object.entries(ps).map(([p,c])=>`<span class="bdg ${bc[p]||''}">${p} ${c}</span>`).join('');const statsH=u?`<div class="su ${credFlash.has(srv.id)?'data-flash':''}"><div class="su-i"><span class="su-v">${fmtK(u.total_requests)}</span><span class="su-l">请求</span></div><div class="su-i"><span class="su-v" style="color:var(--ok)">${fmtK(u.success_count)}</span><span class="su-l">成功</span></div><div class="su-i"><span class="su-v" style="color:var(--err)">${fmtK(u.failure_count)}</span><span class="su-l">失败</span></div><div class="su-i"><span class="su-v">${fmtK(u.total_tokens)}</span><span class="su-l">Token</span></div></div>`:'';
+  return`<div class="ss"><div class="sb" onclick="toggleCol('${srv.id}')"><div class="sir"><span class="dot ${connecting?'off':on?'on':'off'}"></span><div style="min-width:0"><div class="sn">${esc(srv.name)} <span class="arrow ${isC?'col':''}"></span></div><div class="sd"><span class="sd-i"><span class="bdg ${connecting?'bdg-off':on?'bdg-on':'bdg-off'}">${connecting?'<span class="ld" style="width:8px;height:8px;border-width:1.5px"></span> 连接中':on?'在线':'离线'}</span></span>${!connecting?`<span class="sd-i">${esc(maskUrl(srv.url))}</span><span class="sd-i">文件 <strong>${files.length}</strong></span>${ac?`<span class="sd-i" style="color:var(--ok)">正常 <strong>${ac}</strong></span>`:''}${ec?`<span class="sd-i" style="color:var(--err)">异常 <strong>${ec}</strong></span>`:''}${dc?`<span class="sd-i" style="color:var(--warn)">禁用 <strong>${dc}</strong></span>`:''}${pb?`<span style="display:flex;gap:2px;flex-wrap:wrap">${pb}</span>`:''}`:''}</div></div></div><div class="s-act" onclick="event.stopPropagation()"><button class="b bp bsm" onclick="showAddCredModal('${srv.id}')" ${!on?'disabled':''}>+ 凭证</button><button class="b bs bsm" onclick="showApiKeyModal('${srv.id}')" ${!on?'disabled':''}>API Key</button><button class="b bs bsm" onclick="refSQ('${srv.id}')" ${!on||refreshing.has(srv.id)?'disabled':''}>${refreshing.has(srv.id)?'<span class="ld" style="width:10px;height:10px;border-width:1.5px"></span> 刷新中':'刷新全部'}</button><button class="b bs bsm" onclick="showSrvSettings('${srv.id}')" ${!on?'disabled':''}>设置</button><button class="b bs bsm" onclick="showEditModal('${srv.id}')">编辑</button><button class="b bd bsm" onclick="delSrv('${srv.id}')">删除</button></div></div>${statsH}<div class="sbdy ${isC?'col':''} ${credFlash.has(srv.id)?'data-flash':''}">${connecting?'<div style="padding:20px;text-align:center"><span class="ld"></span><span style="margin-left:8px;font-size:13px;color:var(--t2)">正在连接...</span></div>':ff.length?`<div class="fg">${ff.map(f=>renderFC(f)).join('')}</div>`:`<div class="tm" style="font-size:12px;padding:4px 0">${on?'无匹配文件':'服务端离线'}</div>`}</div></div>`}
+function renderFC(file){const p=np(file.provider),pc=bc[p]||'',act=(file.status==='ready'||file.status==='active')&&!file.disabled,sc=act?'bdg-ok':file.disabled?'bdg-warn':'bdg-err',st=file.disabled?'已禁用':file.status||'未知',acc=file.email||file.account||'-',pt=file.id_token?.plan_type||file.plan_type||'',k=ck(file._sid,file.name),c=quotaCache[k],il=loadingFiles.has(k),hep=!!EP[p],lrf=file.last_refresh||file.lastRefreshedAt||'';let qH='';if(il)qH='<div class="qload"><span class="ld"></span>获取中</div>';else if(c)qH=renderQC(p,c);else if(hep&&act)qH=`<div class="qempty" onclick="event.stopPropagation();refSingle('${file._sid}','${esc(file.name)}')">点击获取配额</div>`;else if(!hep)qH='<div class="qempty" style="cursor:default">不支持配额查询</div>';else qH='<div class="qempty" style="cursor:default">账户不可用</div>';return`<div class="fc"><div class="fc-top"><div class="fc-line1"><span class="fc-name" title="${esc(file.name)}">${esc(file.name)}</span><div class="fc-acts">${hep&&act?`<button class="b bs" onclick="event.stopPropagation();refSingle('${file._sid}','${esc(file.name)}')" ${il?'disabled':''}>${il?'<span class="ld" style="width:8px;height:8px;border-width:1.5px"></span>':'刷新'}</button>`:''}<button class="b bs" onclick="event.stopPropagation();dlFile('${file._sid}','${esc(file.name)}')">下载</button></div></div><div class="fc-line2"><span class="bdg ${pc}">${esc(p||'-')}</span>${pt?`<span class="bdg bdg-plan">${esc(fmtPlan(pt))}</span>`:''}<span class="bdg ${sc}">${st}</span>${lrf?`<span style="font-size:10px;color:var(--t2)" title="Token 刷新时间">刷新 ${fmtTs(lrf)}</span>`:''}</div><div class="fc-acc">${esc(acc)}</div><div class="fc-sep"></div></div><div class="fc-body">${qH}</div></div>`}
+
+/* ============ STATS PANEL ============ */
+function renderStats(){
+  const el=document.getElementById('statsPanel');
+  const fl=statsFlash?'data-flash':'';statsFlash=false;
+  const srvOpts=servers.map(s=>`<option value="${s.id}" ${statsServer===s.id?'selected':''}>${esc(s.name)}</option>`).join('');
+  const isAll=statsServer==='all';
+  const target=isAll?servers:servers.filter(s=>s.id===statsServer);
+  const aggU={total_requests:0,success_count:0,failure_count:0,total_tokens:0,input_tokens:0,output_tokens:0,cached_tokens:0,reasoning_tokens:0,apis:{}};
+  const aggDet=[];const aggFiles=[];
+  target.forEach(srv=>{const u=filterU(usageCache[srv.id],timeRange);if(!u)return;
+    if(u.apis)Object.entries(u.apis).forEach(([ep,ae])=>{if(!aggU.apis[ep])aggU.apis[ep]={total_requests:0,success_count:0,failure_count:0,total_tokens:0,models:{}};const t=aggU.apis[ep];t.total_requests+=ae.total_requests||0;t.success_count+=ae.success_count||0;t.failure_count+=ae.failure_count||0;t.total_tokens+=ae.total_tokens||0;Object.entries(ae.models||{}).forEach(([mn,me])=>{if(!t.models[mn])t.models[mn]={total_requests:0,success_count:0,failure_count:0,total_tokens:0,details:[]};t.models[mn].total_requests+=me.total_requests||0;t.models[mn].success_count+=me.success_count||0;t.models[mn].failure_count+=me.failure_count||0;t.models[mn].total_tokens+=me.total_tokens||0;if(me.details)t.models[mn].details=t.models[mn].details.concat(me.details)});
+      aggDet.push(...getDetailsWithServer(u,srv.id,srv.name))});
+    aggFiles.push(...(srv.files||[]))});
+  aggDet.forEach(d=>{aggU.total_requests++;if(d.failed)aggU.failure_count++;else aggU.success_count++;const t=d.tokens||{};aggU.total_tokens+=t.total_tokens||0;if(!d.failed){aggU.input_tokens+=t.input_tokens||0;aggU.output_tokens+=t.output_tokens||0;aggU.cached_tokens+=Math.max(t.cached_tokens||0,t.cache_tokens||0);aggU.reasoning_tokens+=t.reasoning_tokens||0}});
+  const sRate=aggU.total_requests>0?(aggU.success_count/aggU.total_requests*100).toFixed(1)+'%':'-';
+  aggDet.sort((a,b)=>b._t-a._t);
+
+  const models=[...new Set(aggDet.map(d=>d._m))].sort();
+  const creds=[...new Set(aggDet.map(d=>String(d.auth_index||'?')))].sort();
+  const eps=[...new Set(aggDet.map(d=>d._ep))].sort();
+  const srvs=isAll?[...new Set(aggDet.map(d=>d._sn))].sort():[];
+
+  let fm=detFilter.model,fc=detFilter.cred,fe=detFilter.ep,fs=detFilter.srv;
+  let filtered=aggDet;
+  if(isAll&&fs!=='all')filtered=filtered.filter(d=>d._sn===fs);
+  if(fm!=='all')filtered=filtered.filter(d=>d._m===fm);
+  if(fc!=='all')filtered=filtered.filter(d=>String(d.auth_index||'?')===fc);
+  if(fe!=='all')filtered=filtered.filter(d=>d._ep===fe);
+  const show=filtered.slice(0,200);
+
+  const allStatsKeys=['model','apikey','cred','detail'];const allStatsCol=allStatsKeys.every(k=>statsCollapsed.has(k));
+  let h=`<div class="fbar"><div class="bgroup">${['7h','24h','7d','all'].map(r=>`<button class="${timeRange===r?'active':''}" onclick="timeRange='${r}';renderStats()">${r==='all'?'全部':r==='7d'?'7天':r}</button>`).join('')}</div><select onchange="statsServer=this.value;detFilter={model:'all',cred:'all',ep:'all',srv:'all'};renderStats()"><option value="all" ${statsServer==='all'?'selected':''}>全部服务端</option>${srvOpts}</select><div style="margin-left:auto"><button class="b bs bsm" onclick="toggleAllStatsCol()">${allStatsCol?'全部展开':'全部折叠'}</button></div></div>`;
+  h+=`<div class="tbar ${fl}"><span class="tb-t">汇总</span><div class="si"><span class="sv">${fmtK(aggU.total_requests)}</span><span class="sl">请求</span></div><div class="si"><span class="sv" style="color:var(--ok)">${fmtK(aggU.success_count)}</span><span class="sl">成功</span></div><div class="si"><span class="sv" style="color:var(--err)">${fmtK(aggU.failure_count)}</span><span class="sl">失败</span></div><div class="si"><span class="sv" style="color:${parseFloat(sRate)>=90?'var(--ok)':parseFloat(sRate)>=70?'var(--warn)':'var(--err)'}">${sRate}</span><span class="sl">成功率</span></div><div class="si"><span class="sv">${fmtK(aggU.total_tokens)}</span><span class="sl">Token</span></div><div class="si"><span class="sv" style="color:var(--t2)">${fmtK(aggU.input_tokens)}</span><span class="sl">输入</span></div><div class="si"><span class="sv" style="color:var(--t2)">${fmtK(aggU.output_tokens)}</span><span class="sl">输出</span></div><div class="si"><span class="sv" style="color:var(--t2)">${fmtK(aggU.cached_tokens)}</span><span class="sl">缓存</span></div><div class="si"><span class="sv" style="color:var(--t2)">${fmtK(aggU.reasoning_tokens)}</span><span class="sl">推理</span></div></div>`;
+
+  const mMap={};aggDet.forEach(d=>{const k=(isAll?d._sn+'|||':'')+d._m;if(!mMap[k])mMap[k]={model:d._m,srv:d._sn,req:0,ok:0,fail:0,tok:0,inp:0,out:0,cac:0,rea:0};mMap[k].req++;d.failed?mMap[k].fail++:mMap[k].ok++;const t=d.tokens||{};mMap[k].tok+=t.total_tokens||0;mMap[k].inp+=t.input_tokens||0;mMap[k].out+=t.output_tokens||0;mMap[k].cac+=Math.max(t.cached_tokens||0,t.cache_tokens||0);mMap[k].rea+=t.reasoning_tokens||0});const ms=Object.values(mMap).sort((a,b)=>b.req-a.req);
+  if(ms.length){const stc=statsCollapsed.has('model');h+=`<div class="sec-title" onclick="toggleStatsCol('model')"><span class="st-label"><span class="arrow ${stc?'col':''}"></span><span class="st-icon">📊</span>模型统计</span></div>`;if(!stc){let t=`<div class="tw ${fl}"><table><tr>${isAll?'<th>服务端</th>':''}<th>模型</th><th class="num">请求</th><th class="num">成功</th><th class="num">失败</th><th class="num">Token</th><th class="num">输入</th><th class="num">输出</th><th class="num">缓存</th><th class="num">推理</th></tr>`;ms.forEach(m=>{t+=`<tr>${isAll?`<td class="tm">${esc(m.srv)}</td>`:''}<td>${esc(m.model)}</td><td class="num">${m.req}</td><td class="num" style="color:var(--ok)">${m.ok}</td><td class="num" style="color:var(--err)">${m.fail}</td><td class="num">${fmtK(m.tok)}</td><td class="num">${fmtK(m.inp)}</td><td class="num">${fmtK(m.out)}</td><td class="num">${fmtK(m.cac)}</td><td class="num">${fmtK(m.rea)}</td></tr>`});t+=`</table></div>`;h+=t}}
+
+  const epMap={};aggDet.forEach(d=>{const k=(isAll?d._sn+'|||':'')+d._ep;if(!epMap[k])epMap[k]={ep:d._ep,srv:d._sn,req:0,ok:0,fail:0,tok:0,models:{}};epMap[k].req++;d.failed?epMap[k].fail++:epMap[k].ok++;epMap[k].tok+=(d.tokens?.total_tokens||0);const mn=d._m;if(!epMap[k].models[mn])epMap[k].models[mn]={req:0,ok:0,fail:0,tok:0};epMap[k].models[mn].req++;d.failed?epMap[k].models[mn].fail++:epMap[k].models[mn].ok++;epMap[k].models[mn].tok+=(d.tokens?.total_tokens||0)});const apis=Object.values(epMap).sort((a,b)=>b.req-a.req);
+  if(apis.length){const stc=statsCollapsed.has('apikey');h+=`<div class="sec-title" onclick="toggleStatsCol('apikey')"><span class="st-label"><span class="arrow ${stc?'col':''}"></span><span class="st-icon">🔑</span>API KEY 统计</span></div>`;if(!stc){let t=`<div class="tw ${fl}"><table><tr>${isAll?'<th>服务端</th>':''}<th>API KEY</th><th class="num">请求</th><th class="num">成功</th><th class="num">失败</th><th class="num">Token</th></tr>`;apis.forEach((a,i)=>{const eid='ep_'+i;const exp=epExpanded[eid];t+=`<tr>${isAll?`<td class="tm">${esc(a.srv)}</td>`:''}<td><span class="ep-toggle" onclick="epExpanded['${eid}']=!epExpanded['${eid}'];renderStats()"><span class="ep-arrow ${exp?'open':''}">▶</span> ${esc(maskKey(a.ep))}</span></td><td class="num">${a.req}</td><td class="num" style="color:var(--ok)">${a.ok}</td><td class="num" style="color:var(--err)">${a.fail}</td><td class="num">${fmtK(a.tok)}</td></tr>`;if(exp){Object.entries(a.models).sort((x,y)=>y[1].req-x[1].req).forEach(([mn,m])=>{t+=`<tr class="ep-models">${isAll?'<td></td>':''}<td>${esc(mn)}</td><td class="num">${m.req}</td><td class="num" style="color:var(--ok)">${m.ok}</td><td class="num" style="color:var(--err)">${m.fail}</td><td class="num">${fmtK(m.tok)}</td></tr>`})}});t+=`</table></div>`;h+=t}}
+
+  const kMap={};aggDet.forEach(d=>{const ai=String(d.auth_index||'?');const k=(isAll?d._sn+'|||':'')+ai;if(!kMap[k])kMap[k]={authIndex:ai,srv:d._sn,req:0,ok:0,fail:0,tok:0,inp:0,out:0,cac:0,rea:0,email:'',fileName:''};kMap[k].req++;d.failed?kMap[k].fail++:kMap[k].ok++;const t=d.tokens||{};kMap[k].tok+=t.total_tokens||0;kMap[k].inp+=t.input_tokens||0;kMap[k].out+=t.output_tokens||0;kMap[k].cac+=Math.max(t.cached_tokens||0,t.cache_tokens||0);kMap[k].rea+=t.reasoning_tokens||0});Object.values(kMap).forEach(k=>{const f=aggFiles.find(x=>x.auth_index===k.authIndex||x.authIndex===k.authIndex);if(f){k.email=f.email||'';k.fileName=f.name||k.authIndex}else{k.fileName=k.authIndex}});
+  const ks=Object.values(kMap).sort((a,b)=>b.req-a.req);
+  if(ks.length){const stc=statsCollapsed.has('cred');h+=`<div class="sec-title" onclick="toggleStatsCol('cred')"><span class="st-label"><span class="arrow ${stc?'col':''}"></span><span class="st-icon">🎫</span>凭证统计</span></div>`;if(!stc){let t=`<div class="tw ${fl}"><table><tr>${isAll?'<th>服务端</th>':''}<th>凭证</th><th>邮箱</th><th class="num">请求</th><th class="num">成功</th><th class="num">失败</th><th class="num">Token</th><th class="num">输入</th><th class="num">输出</th><th class="num">缓存</th><th class="num">推理</th></tr>`;ks.forEach(k=>{t+=`<tr>${isAll?`<td class="tm">${esc(k.srv)}</td>`:''}<td title="${esc(k.fileName)}" style="max-width:150px;overflow:hidden;text-overflow:ellipsis">${esc(k.fileName)}</td><td>${esc(k.email)}</td><td class="num">${k.req}</td><td class="num" style="color:var(--ok)">${k.ok}</td><td class="num" style="color:var(--err)">${k.fail}</td><td class="num">${fmtK(k.tok)}</td><td class="num">${fmtK(k.inp)}</td><td class="num">${fmtK(k.out)}</td><td class="num">${fmtK(k.cac)}</td><td class="num">${fmtK(k.rea)}</td></tr>`});t+=`</table></div>`;h+=t}}
+
+  if(aggDet.length){const stc=statsCollapsed.has('detail');h+=`<div class="sec-title" onclick="toggleStatsCol('detail')"><span class="st-label"><span class="arrow ${stc?'col':''}"></span><span class="st-icon">📋</span>请求明细 <span class="tm">(最近 ${show.length}/${filtered.length}${filtered.length<aggDet.length?'/ 总'+aggDet.length:''})</span></span></div>`;if(!stc){h+=`<div class="sec-controls">${isAll?`<select onchange="detFilter.srv=this.value;renderStats()"><option value="all" ${fs==='all'?'selected':''}>全部服务端</option>${srvs.map(s=>`<option value="${esc(s)}" ${fs===s?'selected':''}>${esc(s)}</option>`).join('')}</select>`:''}<select onchange="detFilter.model=this.value;renderStats()"><option value="all" ${fm==='all'?'selected':''}>全部模型</option>${models.map(m=>`<option value="${esc(m)}" ${fm===m?'selected':''}>${esc(m)}</option>`).join('')}</select><select onchange="detFilter.cred=this.value;renderStats()"><option value="all" ${fc==='all'?'selected':''}>全部凭证</option>${creds.map(c=>{const em=resolveEmail(c,aggFiles);return`<option value="${esc(c)}" ${fc===c?'selected':''}>${em?esc(em):esc(c)}</option>`}).join('')}</select><select onchange="detFilter.ep=this.value;renderStats()"><option value="all" ${fe==='all'?'selected':''}>全部KEY</option>${eps.map(e=>`<option value="${esc(e)}" ${fe===e?'selected':''}>${esc(maskKey(e))}</option>`).join('')}</select></div><div class="tw ${fl}"><table><tr>${isAll?'<th>服务端</th>':''}<th>时间</th><th>API KEY</th><th>模型</th><th>凭证</th><th>状态</th><th class="num">输入</th><th class="num">输出</th><th class="num">缓存</th><th class="num">推理</th><th class="num">合计</th></tr>`;show.forEach(d=>{const t=d.tokens||{};const em=resolveEmail(String(d.auth_index||'?'),aggFiles);h+=`<tr>${isAll?`<td class="tm">${esc(d._sn)}</td>`:''}<td>${fmtTs(d.timestamp)}</td><td title="${esc(d._ep)}" style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${esc(maskKey(d._ep))}</td><td>${esc(d._m)}</td><td title="${esc(em)}">${esc(em||String(d.auth_index||'?'))}</td><td>${d.failed?'<span style="color:var(--err)">✗</span>':'<span style="color:var(--ok)">✓</span>'}</td><td class="num">${fmtK(t.input_tokens||0)}</td><td class="num">${fmtK(t.output_tokens||0)}</td><td class="num">${fmtK(Math.max(t.cached_tokens||0,t.cache_tokens||0))}</td><td class="num">${fmtK(t.reasoning_tokens||0)}</td><td class="num">${fmtK(t.total_tokens||0)}</td></tr>`});h+=`</table></div>`}}
+
+  if(!ms.length&&!apis.length&&!ks.length)h+='<div class="tm" style="padding:20px;font-size:13px">暂无使用统计数据</div>';
+  el.innerHTML=h;
+}
+
+function renderQC(p,c){if(c.error)return`<div class="qe">错误: ${esc(c.error)}</div>`;if(!c.data)return'<div class="qempty" style="cursor:default">暂无数据</div>';if(p==='claude')return rCl(c.data);if(p==='codex')return rCo(c.data);if(p==='gemini-cli')return rGe(c.data);if(p==='antigravity')return rAn(c.data);if(p==='kimi')return rKi(c.data);return'<div class="qempty" style="cursor:default">不支持</div>'}
+function rCl(d){const w=[];Object.entries(d.limits||{}).forEach(([k,v])=>{if(v&&typeof v==='object'&&'utilization'in v){const u=v.utilization||0,r=Math.max(0,100-u),c=u>70?'h':u>30?'m':'l';w.push(`<div class="qi"><div class="qih"><span class="ql">${fCWL(k)}</span><span class="qv" style="color:${r<30?'var(--err)':'inherit'}">${r.toFixed(0)}%</span></div><div class="pbar"><div class="pfill ${c}" style="width:${r}%"></div></div>${v.resets_at?`<div class="qm">重置于 ${fmtTs(v.resets_at)}</div>`:''}</div>`)}});return w.join('')||'<div class="qempty" style="cursor:default">暂无</div>'}
+function rCo(d){const rl=d.rate_limit||d.rateLimit||{},w=[];const pw=rl.primary_window||rl.primaryWindow;if(pw){const u=pw.used_percent||pw.usedPercent||0,r=100-u,c=u>70?'h':u>30?'m':'l';const rt=pw.reset_at||pw.reset_time||pw.reset_at_timestamp;w.push(`<div class="qi"><div class="qih"><span class="ql">5小时</span><span class="qv" style="color:${r<30?'var(--err)':'inherit'}">${r.toFixed(0)}%</span></div><div class="pbar"><div class="pfill ${c}" style="width:${r}%"></div></div>${rt?`<div class="qm">恢复于 ${fmtResetTime(rt)}</div>`:''}</div>`)}const sw=rl.secondary_window||rl.secondaryWindow;if(sw){const u=sw.used_percent||sw.usedPercent||0,r=100-u,c=u>70?'h':u>30?'m':'l';const rt=sw.reset_at||sw.reset_time||sw.reset_at_timestamp;w.push(`<div class="qi"><div class="qih"><span class="ql">周</span><span class="qv" style="color:${r<30?'var(--err)':'inherit'}">${r.toFixed(0)}%</span></div><div class="pbar"><div class="pfill ${c}" style="width:${r}%"></div></div>${rt?`<div class="qm">恢复于 ${fmtResetTime(rt)}</div>`:''}</div>`)}return w.join('')||'<div class="qempty" style="cursor:default">暂无</div>'}
+function rGe(d){const bs=d.buckets||[];if(!bs.length)return'<div class="qempty" style="cursor:default">暂无</div>';return bs.slice(0,5).map(b=>{const r=(b.remaining_fraction??b.remainingFraction??0)*100,c=r<30?'h':r<70?'m':'l';const rt=b.resetTime||b.reset_time;return`<div class="qi"><div class="qih"><span class="ql" style="max-width:130px;overflow:hidden;text-overflow:ellipsis">${esc(b.model_id||b.modelId||'?')}</span><span class="qv" style="color:${r<30?'var(--err)':'inherit'}">${r.toFixed(0)}%</span></div><div class="pbar"><div class="pfill ${c}" style="width:${r}%"></div></div>${rt?`<div class="qm">恢复于 ${fmtResetTime(rt)}</div>`:''}</div>`}).join('')}
+function rAn(d){if(!d?.models)return'<div class="qempty" style="cursor:default">暂无</div>';return Object.entries(d.models).slice(0,5).map(([k,v])=>{if(!v||typeof v!=='object')return'';const p=(v.remaining_fraction??v.remainingFraction??0)*100,c=p<30?'h':p<70?'m':'l';const rt=v.resetTime||v.reset_time;return`<div class="qi"><div class="qih"><span class="ql" style="max-width:130px;overflow:hidden;text-overflow:ellipsis">${esc(k)}</span><span class="qv" style="color:${p<30?'var(--err)':'inherit'}">${p.toFixed(0)}%</span></div><div class="pbar"><div class="pfill ${c}" style="width:${p}%"></div></div>${rt?`<div class="qm">恢复于 ${fmtResetTime(rt)}</div>`:''}</div>`}).filter(Boolean).join('')||'<div class="qempty" style="cursor:default">暂无</div>'}
+function rKi(d){if(!Array.isArray(d))return'<div class="qempty" style="cursor:default">暂无</div>';return d.slice(0,5).map(i=>{const u=i.used||0,l=i.limit||0,r=l>0?Math.max(0,100-(u/l*100)):100,c=r<30?'h':r<70?'m':'l';return`<div class="qi"><div class="qih"><span class="ql">${esc(i.label||i.model||'?')}</span><span class="qv" style="color:${r<30?'var(--err)':'inherit'}">${r.toFixed(0)}%</span></div><div class="pbar"><div class="pfill ${c}" style="width:${r}%"></div></div>${l>0?`<div class="qm">${u}/${l}</div>`:''}</div>`}).join('')||'<div class="qempty" style="cursor:default">暂无</div>'}
+function fCWL(k){return{five_hour:'5h',seven_day:'7天',seven_day_oauth_apps:'OAuth 7天',seven_day_opus:'Opus 7天',seven_day_sonnet:'Sonnet 7天',seven_day_cowork:'Cowork 7天',iguana_necktie:'Pro限时'}[k]||k.replace(/_/g,' ')}
+function fmtPlan(p){if(!p)return'';const l=p.toLowerCase();if(l.includes('pro'))return'Pro';if(l.includes('max'))return'Max';if(l.includes('team'))return'Team';if(l.includes('plus'))return'Plus';if(l.includes('free'))return'Free';return p}
+
+function refSingle(sid,fn){const s=servers.find(x=>x.id===sid);if(!s)return;const f=(s.files||[]).find(x=>x.name===fn);if(!f)return;refQ(s,f)}
+function showToast(msg){const t=document.getElementById('toast');t.innerHTML=`<span class="ld" style="width:12px;height:12px;border-width:2px"></span>${msg}`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+async function refreshStats(){if(statsRefreshing)return;statsRefreshing=true;try{await Promise.allSettled(servers.filter(s=>s.status==='online').map(s=>fetchUsage(s)));statsFlash=true;renderStats()}finally{statsRefreshing=false;renderStats()}}
+async function dlFile(sid,fn){const s=servers.find(x=>x.id===sid);if(!s)return;try{const r=await fetch(`${s.url}/v0/management/auth-files/download?name=${encodeURIComponent(fn)}`,{headers:{'Authorization':`Bearer ${s.key}`}});if(!r.ok)throw new Error('Failed');const b=await r.blob();const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=fn;a.click();URL.revokeObjectURL(u)}catch(e){alert('下载失败: '+e.message)}}
+function showAddModal(){editId=null;document.getElementById('mt2').textContent='添加服务端';document.getElementById('sn').value='';document.getElementById('su').value='';document.getElementById('sk').value='';document.getElementById('sModal').classList.remove('hidden')}
+function showEditModal(id){const s=servers.find(x=>x.id===id);if(!s)return;editId=id;document.getElementById('mt2').textContent='编辑服务端';document.getElementById('sn').value=s.name;document.getElementById('su').value=s.url;document.getElementById('sk').value=s.key;document.getElementById('sModal').classList.remove('hidden')}
+function hideSModal(){document.getElementById('sModal').classList.add('hidden');editId=null}
+function saveSrv(){const n=document.getElementById('sn').value.trim(),u=document.getElementById('su').value.trim(),k=document.getElementById('sk').value;if(!n||!u){alert('请填写名称和地址');return}let nu=u.replace(/\/v0\/management\/?$/,'');if(!nu.startsWith('http://')&&!nu.startsWith('https://'))nu='http://'+nu;if(editId){const s=servers.find(x=>x.id===editId);if(s){s.name=n;s.url=nu;s.key=k}}else servers.push({id:Date.now().toString(),name:n,url:nu,key:k,status:null,files:[]});save();hideSModal();connectAll()}
+function delSrv(id){const s=servers.find(x=>x.id===id);if(!s)return;document.getElementById('dmsg').textContent=`确定要删除 "${s.name}" 吗？`;delId=id;document.getElementById('dModal').classList.remove('hidden')}
+function hideDModal(){document.getElementById('dModal').classList.add('hidden');delId=null}
+function confirmDel(){if(delId){servers=servers.filter(s=>s.id!==delId);save();renderCur()}hideDModal()}
+
+let addCredSrvId=null,oauthPollTimer=null,oauthState=null,oauthProviderName='';
+const OAUTH_PROVIDERS=[
+  {id:'anthropic',name:'Claude',path:'/anthropic-auth-url'},
+  {id:'codex',name:'Codex',path:'/codex-auth-url'},
+  {id:'gemini-cli',name:'Gemini CLI',path:'/gemini-cli-auth-url'},
+  {id:'antigravity',name:'Antigravity',path:'/antigravity-auth-url'}
+];
+function showAddCredModal(sid){addCredSrvId=sid;const s=servers.find(x=>x.id===sid);if(!s)return;document.getElementById('addCredSrv').textContent='— '+s.name;document.getElementById('oauthBtns').innerHTML=OAUTH_PROVIDERS.map(p=>`<button class="b bs bsm" onclick="startOAuth('${p.id}','${p.path}','${p.name}')">${p.name}</button>`).join('');document.getElementById('credFile').value='';document.getElementById('oauthStep1').classList.remove('hidden');document.getElementById('oauthStep2').classList.add('hidden');document.getElementById('addCredModal').classList.remove('hidden')}
+function hideAddCredModal(){document.getElementById('addCredModal').classList.add('hidden');clearInterval(oauthPollTimer);oauthPollTimer=null;oauthState=null;addCredSrvId=null}
+async function startOAuth(pid,path,name){const s=servers.find(x=>x.id===addCredSrvId);if(!s)return;try{const r=await fetch(`${s.url}/v0/management${path}?is_webui=true`,{headers:{'Authorization':`Bearer ${s.key}`}});if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();const url=d.url||d.auth_url||d.authUrl;if(!url)throw new Error('No URL');oauthState=d.state||null;oauthProviderName=name;document.getElementById('oauthProvider').textContent=name;document.getElementById('oauthUrl').textContent=url;document.getElementById('oauthPolling').innerHTML='<span class="ld" style="width:10px;height:10px;border-width:1.5px"></span> 等待授权中...';document.getElementById('callbackUrl').value='';document.getElementById('oauthStep1').classList.add('hidden');document.getElementById('oauthStep2').classList.remove('hidden');clearInterval(oauthPollTimer);if(oauthState){oauthPollTimer=setInterval(()=>pollOAuth(s),3000)}}catch(e){showToast('OAuth 启动失败: '+e.message)}}
+async function pollOAuth(s){if(!oauthState)return;try{const r=await fetch(`${s.url}/v0/management/get-auth-status?state=${encodeURIComponent(oauthState)}`,{headers:{'Authorization':`Bearer ${s.key}`}});if(!r.ok)return;const d=await r.json();if(d.status==='ok'){clearInterval(oauthPollTimer);oauthPollTimer=null;document.getElementById('oauthPolling').innerHTML='<span style="color:var(--ok)">✓ 授权成功</span>';showToast(oauthProviderName+' 授权成功');await connectSrv(s);renderCur()}else if(d.status==='error'){clearInterval(oauthPollTimer);oauthPollTimer=null;document.getElementById('oauthPolling').innerHTML=`<span style="color:var(--err)">✗ 授权失败: ${esc(d.error||'未知错误')}</span>`}}catch{}}
+function copyOAuthUrl(){const u=document.getElementById('oauthUrl').textContent;navigator.clipboard.writeText(u).then(()=>showToast('已复制'))}
+function openOAuthUrl(){const u=document.getElementById('oauthUrl').textContent;window.open(u,'_blank','noopener,noreferrer')}
+function cancelOAuth(){clearInterval(oauthPollTimer);oauthPollTimer=null;oauthState=null;document.getElementById('oauthStep2').classList.add('hidden');document.getElementById('oauthStep1').classList.remove('hidden')}
+async function submitCallback(){const s=servers.find(x=>x.id===addCredSrvId);if(!s)return;const url=document.getElementById('callbackUrl').value.trim();if(!url){showToast('请输入回调 URL');return}const providerMap={'gemini-cli':'gemini'};try{const r=await fetch(`${s.url}/v0/management/oauth-callback`,{method:'POST',headers:{'Authorization':`Bearer ${s.key}`,'Content-Type':'application/json'},body:JSON.stringify({provider:providerMap[oauthProviderName.toLowerCase()]||oauthProviderName.toLowerCase(),redirect_url:url})});if(!r.ok)throw new Error(`HTTP ${r.status}`);showToast('回调提交成功');clearInterval(oauthPollTimer);oauthPollTimer=null;document.getElementById('oauthPolling').innerHTML='<span style="color:var(--ok)">✓ 授权成功</span>';await connectSrv(s);renderCur()}catch(e){showToast('回调提交失败: '+e.message)}}
+async function uploadCredFile(){const s=servers.find(x=>x.id===addCredSrvId);if(!s)return;const fi=document.getElementById('credFile');if(!fi.files||!fi.files.length){showToast('请选择文件');return}try{const fd=new FormData();fd.append('file',fi.files[0]);const r=await fetch(`${s.url}/v0/management/auth-files`,{method:'POST',headers:{'Authorization':`Bearer ${s.key}`},body:fd});if(!r.ok){const t=await r.text();throw new Error(t||`HTTP ${r.status}`)}showToast('上传成功');await connectSrv(s);renderCur()}catch(e){showToast('上传失败: '+e.message)}}
+
+/* ============ API KEY MANAGEMENT ============ */
+let akSrvId=null,akKeys=[];
+function showApiKeyModal(sid){akSrvId=sid;const s=servers.find(x=>x.id===sid);if(!s||s.status!=='online')return;document.getElementById('akSrvName').textContent='— '+s.name;document.getElementById('akLoading').classList.remove('hidden');document.getElementById('akContent').classList.add('hidden');document.getElementById('akNewKey').value='';document.getElementById('apiKeyModal').classList.remove('hidden');fetchApiKeys()}
+function hideApiKeyModal(){document.getElementById('apiKeyModal').classList.add('hidden');akSrvId=null;akKeys=[]}
+async function fetchApiKeys(){const s=servers.find(x=>x.id===akSrvId);if(!s)return;try{const r=await fetch(`${s.url}/v0/management/api-keys`,{headers:{'Authorization':`Bearer ${s.key}`}});if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();akKeys=d['api-keys']||[];renderAkList()}catch(e){akKeys=[];renderAkList();showToast('获取失败: '+e.message)}finally{document.getElementById('akLoading').classList.add('hidden');document.getElementById('akContent').classList.remove('hidden')}}
+function renderAkList(){const el=document.getElementById('akList');if(!akKeys.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--t2);font-size:12px">暂无 API Key</div>';return}
+el.innerHTML=akKeys.map((k,i)=>{const masked=k.length>12?k.slice(0,4)+'****'+k.slice(-4):k.slice(0,2)+'****';return`<div class="ak-row" id="akr_${i}"><span class="ak-val"><span class="ak-masked">${esc(masked)}</span><span class="ak-full">${esc(k)}</span></span><button class="b bs bsm" onclick="toggleAkFull(${i})" title="显示/隐藏">👁</button><button class="b bs bsm" onclick="copyAk(${i})" title="复制">📋</button><button class="b bd bsm" onclick="delAk(${i})" title="删除">✕</button></div>`}).join('')}
+function toggleAkFull(i){const r=document.getElementById('akr_'+i);if(r)r.classList.toggle('show-full')}
+function copyAk(i){if(!akKeys[i])return;navigator.clipboard.writeText(akKeys[i]).then(()=>showToast('已复制'))}
+async function delAk(i){const s=servers.find(x=>x.id===akSrvId);if(!s)return;try{const r=await fetch(`${s.url}/v0/management/api-keys?index=${i}`,{method:'DELETE',headers:{'Authorization':`Bearer ${s.key}`}});if(!r.ok)throw new Error(`HTTP ${r.status}`);showToast('已删除');await fetchApiKeys()}catch(e){showToast('删除失败: '+e.message)}}
+async function addApiKey(){const s=servers.find(x=>x.id===akSrvId);if(!s)return;const v=document.getElementById('akNewKey').value.trim();if(!v){showToast('请输入 API Key');return}const newKeys=[...akKeys,v];try{const r=await fetch(`${s.url}/v0/management/api-keys`,{method:'PUT',headers:{'Authorization':`Bearer ${s.key}`,'Content-Type':'application/json'},body:JSON.stringify(newKeys)});if(!r.ok)throw new Error(`HTTP ${r.status}`);document.getElementById('akNewKey').value='';showToast('已添加');await fetchApiKeys()}catch(e){showToast('添加失败: '+e.message)}}
+function genApiKey(){const cs='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';const a=new Uint8Array(17);crypto.getRandomValues(a);const k='sk-'+Array.from(a,b=>cs[b%cs.length]).join('');document.getElementById('akNewKey').value=k}
+
+/* ============ SETTINGS MODAL ============ */
+let stSrvId=null;
+function showSrvSettings(sid){stSrvId=sid;const s=servers.find(x=>x.id===sid);if(!s||s.status!=='online')return;document.getElementById('stSrvName').textContent='— '+s.name;document.getElementById('stLoading').classList.remove('hidden');document.getElementById('stContent').classList.add('hidden');document.getElementById('settingsModal').classList.remove('hidden');loadSettingsCfg()}
+function hideSettingsModal(){document.getElementById('settingsModal').classList.add('hidden');stSrvId=null}
+async function loadSettingsCfg(){const s=servers.find(x=>x.id===stSrvId);if(!s)return;const cfg={};const endpoints=[{key:'proxy-url',path:'/proxy-url',label:'代理 URL',type:'text',placeholder:'例如: socks5://user:pass@host:1080/'},{key:'request-retry',path:'/request-retry',label:'请求重试次数',type:'number',placeholder:'0'},{key:'routing/strategy',path:'/routing/strategy',label:'路由策略',type:'select',options:[{v:'round-robin',l:'round-robin (轮询)'},{v:'fill-first',l:'fill-first (填满优先)'}]}];
+await Promise.allSettled(endpoints.map(async ep=>{try{const r=await fetch(`${s.url}/v0/management${ep.path}`,{headers:{'Authorization':`Bearer ${s.key}`}});if(r.ok){const d=await r.json();cfg[ep.key]=d[ep.key]??d.value??''}else cfg[ep.key]=null}catch{cfg[ep.key]=null}}));
+const c=document.getElementById('stContent');if(!c)return;let h='';endpoints.forEach(ep=>{const v=cfg[ep.key];h+=`<div style="background:var(--bg0);border-radius:6px;padding:10px 12px;border:1px solid var(--bdr)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:13px;font-weight:600">${ep.label}</span>${v!==null?`<span style="font-size:11px;color:var(--t2)">当前: <strong style="color:var(--t1)">${esc(String(v))}</strong></span>`:''}</div>`;
+if(v===null){h+=`<div style="font-size:12px;color:var(--t2)">此服务端不支持该配置</div>`}else if(ep.type==='select'){h+=`<div style="display:flex;gap:6px;align-items:center"><select class="fi" id="st_${ep.key}" style="flex:1;font-size:12px">${ep.options.map(o=>`<option value="${esc(o.v)}" ${String(v)===o.v?'selected':''}>${esc(o.l)}</option>`).join('')}</select><button class="b bp bsm" onclick="saveStCfg('${ep.key}','${ep.path}')">保存</button></div>`}else{h+=`<div style="display:flex;gap:6px;align-items:center"><input class="fi" id="st_${ep.key}" type="${ep.type}" value="${esc(String(v))}" placeholder="${ep.placeholder}" style="flex:1;font-size:12px"><button class="b bp bsm" onclick="saveStCfg('${ep.key}','${ep.path}')">保存</button>${v?`<button class="b bs bsm" onclick="clearStCfg('${ep.path}')">清除</button>`:''}</div>`}
+h+='</div>'});c.innerHTML=h;document.getElementById('stLoading').classList.add('hidden');c.classList.remove('hidden')}
+async function saveStCfg(key,path){const s=servers.find(x=>x.id===stSrvId);if(!s)return;const inp=document.getElementById('st_'+key);if(!inp)return;let v=inp.value.trim();if(inp.type==='number')v=parseInt(v)||0;try{const r=await fetch(`${s.url}/v0/management${path}`,{method:'PUT',headers:{'Authorization':`Bearer ${s.key}`,'Content-Type':'application/json'},body:JSON.stringify({value:v})});if(!r.ok)throw new Error(`HTTP ${r.status}`);showToast('保存成功');loadSettingsCfg()}catch(e){showToast('保存失败: '+e.message)}}
+async function clearStCfg(path){const s=servers.find(x=>x.id===stSrvId);if(!s)return;try{const r=await fetch(`${s.url}/v0/management${path}`,{method:'DELETE',headers:{'Authorization':`Bearer ${s.key}`}});if(!r.ok)throw new Error(`HTTP ${r.status}`);showToast('已清除');loadSettingsCfg()}catch(e){showToast('清除失败: '+e.message)}}
+</script>
+</body>
+</html>
