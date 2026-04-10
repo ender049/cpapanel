@@ -4,7 +4,7 @@
 
 ## 在线访问
 
-**[ender049.github.io/cpapanel](https://ender049.github.io/cpapanel/)**
+**[ender049.github.io/cpapanel](http://ender049.github.io/cpapanel/)**
 
 ## 为什么做这个
 
