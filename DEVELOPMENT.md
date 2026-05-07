@@ -36,6 +36,7 @@ index.html                    — 唯一工作文件，全部代码
     ├── 渲染函数              — renderCred/renderStats/renderCredSrv/renderFC
     ├── 配额渲染              — rCl/rCo/rGe/rAn/rKi
     ├── OAuth 流程            — startOAuth/pollOAuth/submitCallback
+    ├── 凭证操作              — dlFile/setCredDisabled/delCred
     ├── API Key 管理          — fetchApiKeys/addApiKey/delAk/genApiKey
     ├── 网络设置              — loadSettingsCfg/saveStCfg/clearStCfg
     ├── 自动刷新              — setAutoRefresh/startArCountdown/manualRefresh
@@ -83,6 +84,7 @@ autoRefreshSec / autoRefreshCountdown / autoRefreshCountdownTimer
 | 认证文件列表 | GET | `/v0/management/auth-files` | 返回 `{files: [...]}` |
 | 下载文件 | GET | `/v0/management/auth-files/download?name=` | 返回 blob |
 | 上传文件 | POST | `/v0/management/auth-files` | multipart `file` 字段 |
+| 删除文件 | DELETE | `/v0/management/auth-files?name=` | 删除单个认证文件 |
 | 使用统计 | GET | `/v0/management/usage` | 返回 `{apis: {...}}` |
 | 代理请求 | POST | `/v0/management/api-call` | body: `{authIndex,method,url,header,data}` |
 | API Key 列表 | GET | `/v0/management/api-keys` | 返回 `{"api-keys": [...]}` |
